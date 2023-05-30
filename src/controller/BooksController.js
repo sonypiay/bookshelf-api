@@ -19,12 +19,35 @@ const showAll = (req, res) => {
         statusMessage = 'success';
         responseMessage = 'OK';
 
-        httpResponse.status = statusMessage;
-        httpResponse.data.books = booksModel.show().map((item) => ({
+        const { reading, finished, name } = req.query;
+        let books = booksModel.show();
+
+        if( name && name != '' )
+        {
+            const queryName = new RegExp(`${name}`, 'gi');
+            books = books.filter((item) => item.name.match(queryName));
+        }
+        
+        if( reading && reading != '' )
+        {
+            const isReading = reading == '1' ? true : false;
+            books = books.filter((item) => item.reading === isReading);
+        }
+        
+        if( finished && reading != '' )
+        {
+            const isFinished = finished == '1' ? true : false;
+            books = books.filter((item) => item.finished === isFinished);
+        }
+
+        books = books.map((item) => ({
             id: item.id,
             name: item.name,
             publisher: item.publisher,
         }));
+
+        httpResponse.status = statusMessage;
+        httpResponse.data.books = books;
     } catch (error) {
         console.log(error);
 
