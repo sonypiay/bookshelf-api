@@ -1,4 +1,5 @@
 const booksModel = require('../model/BooksModel');
+const { v4: uuidv4 } = require('uuid');
 
 /** show all books */
 const showAll = (req, res) => {
@@ -19,7 +20,11 @@ const showAll = (req, res) => {
         responseMessage = 'OK';
 
         httpResponse.status = statusMessage;
-        httpResponse.data.books = booksModel.show();
+        httpResponse.data.books = booksModel.show().map((item) => ({
+            id: item.id,
+            name: item.name,
+            publisher: item.publisher,
+        }));
     } catch (error) {
         console.log(error);
 
@@ -39,7 +44,7 @@ const showById = (req, res) => {
     let httpResponse = {
         status: null,
         data: {
-            books: {},
+            book: {},
         }
     };
 
@@ -48,12 +53,23 @@ const showById = (req, res) => {
         responseMessage;
 
     try {
+        const id = req.params.id;
+        const detailBook = booksModel.show().find((item) => item.id === id);
+
         statusCode = 200;
         statusMessage = 'success';
         responseMessage = 'OK';
 
+        if( ! detailBook ) 
+        {
+            statusCode = 404;
+            statusMessage = 'fail';
+            responseMessage = 'Buku tidak ditemukan';
+            httpResponse.message = responseMessage;
+        }
+
         httpResponse.status = statusMessage;
-        // httpResponse.data.books = booksModel.showById();
+        httpResponse.data.book = detailBook ?? {};
     } catch (error) {
         console.log(error);
 
@@ -80,12 +96,48 @@ const store = (req, res) => {
         responseMessage;
 
     try {
-        statusCode = 200;
-        statusMessage = 'success';
-        responseMessage = 'OK';
+        const requestParams = {
+            id: uuidv4(),
+            name: req.payload.name,
+            year: req.payload.year,
+            author: req.payload.author,
+            summary: req.payload.summary,
+            publisher: req.payload.publisher,
+            pageCount: req.payload.pageCount,
+            readPage: req.payload.readPage,
+            reading: req.payload.reading,
+            finished: req.payload.pageCount === req.payload.readPage,
+            insertedAt: new Date().toISOString(),
+            updatedAt: null,
+        };
+
+        if( ! requestParams.name || requestParams.name === undefined || requestParams.name === '' )
+        {
+            statusCode = 400;
+            statusMessage = 'fail';
+            responseMessage = 'Gagal menambahkan buku. Mohon isi nama buku';
+        }
+        else if( requestParams.readPage > requestParams.pageCount )
+        {
+            statusCode = 400;
+            statusMessage = 'fail';
+            responseMessage = 'Gagal menambahkan buku. readPage tidak boleh lebih besar dari pageCount';
+        }
+        else
+        {
+            statusCode = 201;
+            statusMessage = 'success';
+            responseMessage = 'Buku berhasil ditambahkan';
+
+            booksModel.create(requestParams);
+        }
 
         httpResponse.status = statusMessage;
-        httpResponse.request = req.payload;
+        httpResponse.message = responseMessage;
+
+        if( statusCode == 201 ) httpResponse.data = {
+            bookId: requestParams.id,
+        };
     } catch (error) {
         console.log(error);
 

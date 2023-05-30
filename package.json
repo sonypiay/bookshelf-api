@@ -13,6 +13,7 @@
     "nodemon": "^2.0.22"
   },
   "dependencies": {
-    "@hapi/hapi": "^21.3.2"
+    "@hapi/hapi": "^21.3.2",
+    "uuid": "^9.0.0"
   }
 }
