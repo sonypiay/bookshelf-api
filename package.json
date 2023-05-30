@@ -1,13 +1,13 @@
 {
   "name": "bookshelf-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "Bookshelf API submission from Dicoding Indonesia using Node JS & Hapi Framework",
   "scripts": {
     "start": "node src/serve.js",
     "start-dev": "nodemon src/serve.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Sony Darmawan, sonypiay",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^2.0.22"
