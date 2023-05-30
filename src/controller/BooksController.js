@@ -54,7 +54,7 @@ const showById = (req, res) => {
 
     try {
         const id = req.params.id;
-        const detailBook = booksModel.show().find((item) => item.id === id);
+        const detailBook = booksModel.showById(id);
 
         statusCode = 200;
         statusMessage = 'success';
@@ -106,7 +106,7 @@ const store = (req, res) => {
             pageCount: req.payload.pageCount,
             readPage: req.payload.readPage,
             reading: req.payload.reading,
-            finished: req.payload.pageCount === req.payload.readPage,
+            finished: req.payload.pageCount === req.payload.readPage ? true : false,
             insertedAt: new Date().toISOString(),
             updatedAt: null,
         };
@@ -164,12 +164,42 @@ const update = (req, res) => {
         responseMessage;
 
     try {
-        statusCode = 200;
-        statusMessage = 'success';
-        responseMessage = 'OK';
+        const id = req.params.id;
+        const requestParams = {
+            name: req.payload.name,
+            year: req.payload.year,
+            author: req.payload.author,
+            summary: req.payload.summary,
+            publisher: req.payload.publisher,
+            pageCount: req.payload.pageCount,
+            readPage: req.payload.readPage,
+            reading: req.payload.reading,
+            updatedAt: new Date().toISOString(),
+        };
+
+        if( ! requestParams.name || requestParams.name === undefined || requestParams.name === '' )
+        {
+            statusCode = 400;
+            statusMessage = 'fail';
+            responseMessage = 'Gagal memperbarui buku. Mohon isi nama buku';
+        }
+        else if( requestParams.readPage > requestParams.pageCount )
+        {
+            statusCode = 400;
+            statusMessage = 'fail';
+            responseMessage = 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount';
+        }
+        else
+        {
+            const isUpdated = booksModel.update( id, requestParams );
+
+            statusCode = isUpdated ? 200 : 404;
+            statusMessage = isUpdated ? 'success' : 'fail';
+            responseMessage = isUpdated ? 'Buku berhasil diperbarui' : 'Gagal memperbarui buku. Id tidak ditemukan';
+        }
 
         httpResponse.status = statusMessage;
-        httpResponse.request = req.payload;
+        httpResponse.message = responseMessage;
     } catch (error) {
         console.log(error);
 
@@ -196,12 +226,22 @@ const destroy = (req, res) => {
         responseMessage;
 
     try {
+        const id = req.params.id;
+        const isDeleted = booksModel.delete(id);
+
         statusCode = 200;
         statusMessage = 'success';
-        responseMessage = 'OK';
+        responseMessage = 'Buku berhasil dihapus';
+
+        if( ! isDeleted ) 
+        {
+            statusCode = 404;
+            statusMessage = 'fail';
+            responseMessage = 'Buku gagal dihapus. Id tidak ditemukan';
+        }
 
         httpResponse.status = statusMessage;
-        httpResponse.request = req.payload;
+        httpResponse.message = responseMessage;
     } catch (error) {
         console.log(error);
 
